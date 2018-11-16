@@ -1,6 +1,6 @@
 # Ambassadors Containers 
 
-!()[https://github.com/cesarvr/hugo-blog/blob/master/static/istio-2/ambassador.png] 
+![](https://github.com/cesarvr/hugo-blog/blob/master/static/istio-2/ambassador.png)
 
 It just a container that sits in front of a service another service to add new features or to enhance existing ones, this is part of the pattern is defined in this [paper](https://ai.google/research/pubs/pub45406) or by taking a look a this [blog post](https://cesarvr.io/post/istio-2/). 
 
@@ -74,7 +74,7 @@ console.log('Listening for request in 8080!!')
 
 ## API 
 
-### Server
+### Server
 
 - constructor({port, handler})  
   - The constructor initiate a new TCP server by specifying the port, and an anonymous function to handle a new connection.
@@ -83,7 +83,7 @@ console.log('Listening for request in 8080!!')
 - Server.respond: accepts an array representing data chunks. 
 - Events: the class emits a ``server:traffic`` event any time there is new data from a connected client.
 
-### Service
+### Service
 
 This class handle the communication with the server.   
 
