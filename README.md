@@ -6,7 +6,9 @@ It just a container that sits in front of a service another service to add new f
 
 ## Node-Ambassador 
 
-Its just an API that facilitate the communication between the traffic coming to the service and the traffic going to the service. This library has two classes.
+Its just an API that facilitate the communication between the traffic coming to the service and the traffic going from the service to the client that made the call. You can think of it as a easy library to create proxy servers. 
+
+This library has two classes.
 
 - The Server class: To proxy any information you first need to receive information. 
 - The Service class: Helps to manipulate the service I/O. 
