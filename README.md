@@ -14,6 +14,14 @@ This library has two classes.
 - The Service class: Helps to manipulate the service I/O. 
 
 
+## Installation 
+
+```sh
+  npm install node-ambassador --save
+```
+
+
+
 ## Creating a Proxy 
 
 ![](https://raw.githubusercontent.com/cesarvr/hugo-blog/master/static/istio-2/relationship-objects.png)
