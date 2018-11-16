@@ -91,7 +91,10 @@ console.log('Listening for request in 8080!!')
   - Any new connections injects the server class that handle the I/O of the connection.
 
 - Server.respond: accepts an array representing data chunks. 
-- Events: the class emits a ``server:traffic`` event any time there is new data from a connected client.
+
+#### Events 
+
+- the class emits a ``server:traffic`` event any time there is new data from a connected client.
 
 ### Service
 
@@ -99,9 +102,12 @@ This class handle the communication with the server.
 
 - constructor({port}) 
   - The constructor initiated a TCP client with any service running in the local-host, to the specified **port**. 
+
   - Service.send: its just a wrapper over the **socket.write**. 
     
-- Events: ``service:response:${status}`` it emits the response of the service, classified by HTTP status. For example: 
+#### Events 
+
+- ``service:response:${status}`` it emits the response of the service, classified by HTTP status. For example: 
 
   ```js
 
@@ -110,7 +116,7 @@ This class handle the communication with the server.
   ```
 
 
-  -  ``service:response:all`` It triggers with any type of response coming from the service.
+- ``service:response:all`` It triggers with any type of response coming from the service.
 
 
 
