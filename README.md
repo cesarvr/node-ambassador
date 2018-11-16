@@ -2,7 +2,7 @@
 
 ![](https://github.com/cesarvr/hugo-blog/blob/master/static/istio-2/ambassador.png)
 
-It just a container that sits in front of a service another service to add new features or to enhance existing ones, this is part of the pattern is defined in this [paper](https://ai.google/research/pubs/pub45406) or by taking a look a this [blog post](https://cesarvr.io/post/istio-2/). 
+It just a container that sits in front of a service another service to add new features or to enhance existing ones, this is part of [design patterns for container-based distributed systems](https://ai.google/research/pubs/pub45406) if you want to learn how to do it Kubernetes/OpenShift just take a look a this [blog post](https://cesarvr.io/post/istio-2/). 
 
 ## Node-Ambassador 
 
