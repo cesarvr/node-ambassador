@@ -84,6 +84,7 @@ console.log('Listening for request in 8080!!')
 - Events: the class emits a ``server:traffic`` event any time there is new data from a connected client.
 
 ### Service
+
 This class handle the communication with the server.   
 
 - constructor({port}) 
