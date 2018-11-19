@@ -4,7 +4,7 @@ var Events = require('events')
 console.log('DEBUG-Version!!')
 
 let HTTP = Object.create({
-  supportedHTTP: 'HTTP/1.1', 
+  version: /HTTP\/1./, 
 
   getStatus: function(data){
     let headerFirstLine = data.toString().split('\n')[0]
@@ -46,7 +46,7 @@ let HTTP = Object.create({
     if(data === undefined || data === '')
       return false
     
-    return data.split('\n')[0].indexOf(this.supportedHTTP) !== -1 
+    return data.search(this.version) !== -1 
   },
 
   isResponse: function(data){
@@ -55,7 +55,7 @@ let HTTP = Object.create({
     if(data === undefined || data === '')
       return false
 
-    return data.split('\n')[0].indexOf(this.supportedHTTP) !== -1 
+    return data.search(this.version) !== -1 
   }
 })
 
