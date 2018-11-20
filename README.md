@@ -76,7 +76,10 @@ This constructor creates a new TCP server.
 ```js
   new Server({port, handler: (connection)=> {} })
 ```
-- constructor({port, handler})  
+Syntax: 
+```js
+constructor({port, handler}) 
+```
   - The constructor initiate a new TCP server by specifying the port, and an anonymous function to handle a new connection.
 
 #### Connection
@@ -112,8 +115,10 @@ This constructor creates a new HTTP type of server.
 ```js
   new HTTPServer({port, handler: (httpConnection)=> {} })
 ```
-
-- constructor({port, handler})  
+Syntax: 
+``js
+  constructor({port, handler})
+``
   - The constructor initiate a new HTTP server by specifying the port, and an anonymous function to handle a new connection.
 
 
