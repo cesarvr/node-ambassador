@@ -87,6 +87,8 @@ Here is an example of overriding the response of a [Wildfly Java](https://www.go
 
 ![](https://raw.githubusercontent.com/cesarvr/ambassador/master/assets/final.gif)
 
+### More Ideas
+
 Other example, imagine you want to be notified if a server crash with an HTTP 500.
 
 ```js
@@ -101,6 +103,7 @@ Another, imagine you want to test create a reusable container that intercepts an
 
   /*if valid send just handover the service response*/
 ```
+
 ## API
 
 ### Server
