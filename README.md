@@ -121,7 +121,7 @@ This constructor creates a new HTTP type of server.
 
 Similar to connection but it add helper function to detect HTTP headers.
 
-###### Methods
+###### Methods
 
 ```js
 httpConnection.send(data)
