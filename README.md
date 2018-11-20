@@ -1,18 +1,15 @@
 # Ambassadors Containers
 
-![](https://github.com/cesarvr/hugo-blog/blob/master/static/istio-2/ambassador.png)
 
-It just a container that sits in front of a service another service to add new features or to enhance existing ones, this is part of [design patterns for container-based distributed systems](https://ai.google/research/pubs/pub45406) if you want to learn how to do it Kubernetes/OpenShift just take a look a this [blog post](https://cesarvr.io/post/istio-2/).
+[The Ambassador pattern](https://ai.google/research/pubs/pub45406), is a way to configure containers where one container the ambassador proxy communication to and from a main container, the ambassador can be designed to encapsulate features that enhance the main container. For example, you have a service making calls to some other service, but now that "other" service requires some authentication, you can develop an ambassador container that handle that new feature and keep the original service agnostic of security protocols. The key point is to encapsulate reusable behaviour inside a container and then plug and play this behaviour on demand taking advantage of platforms like Kubernetes/OpenShift. 
+
+If you want more example take a look a [this post](https://cesarvr.io/post/istio-2/).
+
+![](https://github.com/cesarvr/hugo-blog/blob/master/static/istio-2/ambassador.png)
 
 ## Node-Ambassador
 
-Its just an API that facilitate the communication between the traffic coming to the service and the traffic going from the service to the client that made the call. You can think of it as a easy library to create proxy servers.
-
-This library has two classes.
-
-- The Server class: To proxy any information you first need to receive information.
-- The Service class: Helps to manipulate the service I/O.
-
+Its just an API that facilitate the communication between the traffic coming to the service and the traffic going from the service to the client that made the call. You can think of it as a easy library to create and manipulate proxy servers.
 
 ## Installation
 
@@ -29,23 +26,25 @@ This library has two classes.
 We just need to connect the two classes, and we got a full proxy.
 
 ```js
-let { Service, Server } =  require('node-ambassador')
+  function handleConnection(server) {
+    let target_port = process.env['TARGET_PORT'] || 8087
+    console.log(`Target port: ${target_port}`)
+    let service = new HTTPService({port: target_port })
 
-function handleConnection(server) {
-  let service = new Service({port: process.env['PORT'] || 8087})
+    // Tunnel
+    server.on( 'server:read',  data => service.send(data)   )
+    service.on('service:read', data => server.send(data)    )
+  }
 
-  server.on('server:traffic', incomingData => service.send(incomingData))
-  service.on('service:response:all', (status, response) => server.respond(response) )
-}
 
-new Server({port: 8080, handler: handleConnection})
-console.log('Listening for request in 8080!!')
+  let port = process.env['PORT'] || 8080
+  new HTTPServer({port, handler: handleConnection})
+  console.log(`Listening for request in ${port}`)```
 ```
-
 
 ## How To Override A Response
 
-Let's say you want to change the response coming from a service, let's say you want to change the message of the 404 status.
+Let's say you want to change the response coming from a service, let's say you want to change the default message of the 404 status.
 
 First you write or load the page:
 
@@ -67,6 +66,41 @@ Connection: close
 
 You detect the response header of the service and send the response.
 
+```js
+
+const HTTP404 = `...`
+function handleConnection(server) {
+  /*...*/
+  let service = new HTTPService({port: target_port })
+
+  service.on('service:http:404', (header, response) => server.respond(HTTP404) ) 
+
+  // Tunnel
+  server.on( 'server:read',  data => service.send(data)   )
+  service.on('service:read', data => server.send(data)    )
+}
+
+/*...server initialization...*/
+```
+
+Here is an example of overriding the response of a [Wildfly Java](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=2ahUKEwjo1fqdg-PeAhUHLVAKHV0OCk8QFjAAegQIChAB&url=http%3A%2F%2Fwildfly.org%2F&usg=AOvVaw0_um9NB2aqGeJRcMk6CPHb) micro-service.
+
+![](https://raw.githubusercontent.com/cesarvr/ambassador/master/assets/final.gif)
+
+Other example, imagine you want to be notified if a server crash with an HTTP 500.
+
+```js
+  service.on('service:http:500', (header, response) => send_email_to_me ) 
+```
+
+Another, imagine you want to test create a reusable container that intercepts and validates requests.
+
+```js
+  server.on('service:read', (response) => OAuth.check_token() ) 
+  OAuth.on('token:invalid', (err_code)=> server.send(HTML(err_code)) )
+
+  /*if valid send just handover the service response*/
+```
 ## API
 
 ### Server
