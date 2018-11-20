@@ -83,7 +83,7 @@ This constructor creates a new TCP server.
 
 Takes care of handling the I/O for clients connected to the server.
 
-###### Methods
+###### Methods
 
 ```js
 httpConnection.send(data)
