@@ -116,9 +116,9 @@ This constructor creates a new HTTP type of server.
   new HTTPServer({port, handler: (httpConnection)=> {} })
 ```
 Syntax: 
-``js
+```js
   constructor({port, handler})
-``
+```
   - The constructor initiate a new HTTP server by specifying the port, and an anonymous function to handle a new connection.
 
 
