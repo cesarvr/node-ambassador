@@ -1,7 +1,9 @@
 # Ambassadors Containers
 
 
-[The Ambassador pattern](https://ai.google/research/pubs/pub45406), is a way to configure containers where one container the ambassador proxy communication to and from a main container, the ambassador can be designed to encapsulate features that enhance the main container. For example, you have a service making calls to some other service, but now that "other" service requires some authentication, you can develop an ambassador container that handle that new feature and keep the original service agnostic of security protocols. The key point is to encapsulate reusable behaviour inside a container and then plug and play this behaviour on demand taking advantage of platforms like Kubernetes/OpenShift. 
+[The Ambassador pattern](https://ai.google/research/pubs/pub45406), is a way to configure containers where one container the ambassador proxy communication to and from a main container, the ambassador can be designed to encapsulate features that enhance the main container. 
+
+For example, you have a service making calls to some other service, but now that "other" service requires some authentication, you can develop an ambassador container that handle that new feature and keep the original service agnostic of security protocols. 
 
 If you want more example take a look a [this post](https://cesarvr.io/post/istio-2/).
 
