@@ -163,7 +163,13 @@ This method orchestrate a proxy between incoming traffic and the main container.
  ```js
    ambassador.tunnel({ subscriber({ request, response }) })
  ```
-    - **response.listen:** Listen for the response from the service.
-    - **response.override:** Stops the normal flow of communication in the proxy and replace the response with a custom one.
-    - **request.listen:** Listen for the data coming to the container.
-    - **request.server:** *Coming soon*.
+
+**Response** Methods:
+
+  - **listen:** Listen for the response from the service.
+  - **override:** Stops the normal flow of communication in the proxy and replace the response with a custom one.
+
+**Request** Methods:
+
+  - **listen:** Listen for the data coming to the container.
+  - **server:** *Coming soon*.
