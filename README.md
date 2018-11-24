@@ -1,9 +1,9 @@
 # Ambassadors Containers
 
 
-[The Ambassador pattern](https://ai.google/research/pubs/pub45406), is a way to configure containers where one container the ambassador proxy communication to and from a main container, the ambassador can be designed to encapsulate features that enhance the main container. 
+[The Ambassador pattern](https://ai.google/research/pubs/pub45406), is a way to configure containers where one container the ambassador proxy communication to and from a main container, the ambassador can be designed to encapsulate features that enhance the main container.
 
-For example, you have a service making calls to some other service, but now that "other" service requires some authentication, you can develop an ambassador container that handle that new feature and keep the original service agnostic of security protocols. 
+For example, you have a service making calls to some other service, but now that "other" service requires some authentication, you can develop an ambassador container that handle that new feature and keep the original service agnostic of security protocols.
 
 If you want more example take a look a [this post](https://cesarvr.io/post/istio-2/).
 
@@ -11,7 +11,9 @@ If you want more example take a look a [this post](https://cesarvr.io/post/istio
 
 ## Node-Ambassador
 
-Its just an API that facilitate the communication between the traffic coming to the service and the traffic going from the service to the client that made the call. You can think of it as a easy library to create and manipulate proxy servers.
+Its just an API that facilitate the communication between the traffic coming to the service and the traffic going from the service to the client that made the call.
+
+You can think of it as a easy library to create and manipulate proxy servers.
 
 ## Installation
 
@@ -28,21 +30,19 @@ Its just an API that facilitate the communication between the traffic coming to 
 We just need to connect the two classes, and we got a full proxy.
 
 ```js
-  function handleConnection(server) {
-    let target_port = process.env['TARGET_PORT'] || 8087
-    console.log(`Target port: ${target_port}`)
-    let service = new HTTPService({port: target_port })
 
-    // Tunnel
-    server.on( 'server:read',  data => service.send(data)   )
-    service.on('service:read', data => server.send(data)    )
-  }
+let { Ambassador }  = require('../node-ambassador/')
 
+const TARGET = process.env['TARGET_PORT'] || 8087
+const PORT   = process.env['PORT'] || 8080
 
-  let port = process.env['PORT'] || 8080
-  new HTTPServer({port, handler: handleConnection})
-  console.log(`Listening for request in ${port}`)```
+new Ambassador({port: PORT, target: TARGET}).tunnel({})
+
+console.log(`Listening for request in ${PORT} and targeting ${TARGET}`)
+
 ```
+
+![](https://github.com/cesarvr/hugo-blog/blob/master/static/istio-2/proxy-v1.gif)
 
 ## How To Override A Response
 
@@ -70,19 +70,25 @@ You detect the response header of the service and send the response.
 
 ```js
 
-const HTTP404 = `...`
-function handleConnection(server) {
-  /*...*/
-  let service = new HTTPService({port: target_port })
+let { ambassador }  = require('../node-ambassador/')
+const http404 = `...`
 
-  service.on('service:http:404', (header, response) => server.respond(HTTP404) ) 
+const target = process.env['target_port'] || 8087
+const port   = process.env['port'] || 8080
 
-  // Tunnel
-  server.on( 'server:read',  data => service.send(data)   )
-  service.on('service:read', data => server.send(data)    )
+function ret404({response, request}) {
+   response.listen((header) => {
+     if(header.status === '404')
+      response.override(http404)
+   })
 }
 
-/*...server initialization...*/
+new ambassador({port: PORT, target: TARGET})
+      .tunnel({subscriber: ret404 })
+
+console.log(`listening for request in ${PORT} and targeting ${TARGET}`)
+
+
 ```
 
 Here is an example of overriding the response of a [Wildfly Java](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=2ahUKEwjo1fqdg-PeAhUHLVAKHV0OCk8QFjAAegQIChAB&url=http%3A%2F%2Fwildfly.org%2F&usg=AOvVaw0_um9NB2aqGeJRcMk6CPHb) micro-service.
@@ -94,106 +100,70 @@ Here is an example of overriding the response of a [Wildfly Java](https://www.go
 Other example, imagine you want to be notified if a server crash with an HTTP 500.
 
 ```js
-  service.on('service:http:500', (header, response) => send_email_to_me ) 
+
+function ret500(header) {
+     if(header.status === '500')
+      send_mail_to()
+}
+
+ new ambassador({port: PORT, target: TARGET_PORT})
+      .tunnel({
+        subscriber: ({response}) =>
+                        response.listen( ret500 )
+      })
+
 ```
 
 Another, imagine you want to test create a reusable container that intercepts and validates requests.
 
 ```js
-  server.on('service:read', (response) => OAuth.check_token() ) 
-  OAuth.on('token:invalid', (err_code)=> server.send(HTML(err_code)) )
+let { ambassador }  = require('../node-ambassador/')
 
-  /*if valid send just handover the service response*/
+const target = process.env['target_port'] || 8087
+const port   = process.env['port'] || 8080
+
+function OAuth(header, payload) {
+  check_token(payload) // throw: NotAuthenticated   
+}
+
+new ambassador({port: PORT, target: TARGET})
+      .tunnel({
+        subscriber: ({request}) => request.listen( OAuth )
+      })
 ```
 
 ## API
 
-### Server
+### Ambassador
 
-This constructor creates a new TCP server.
-
-```js
-  new Server({port, handler: (connection)=> {} })
-```
-Syntax: 
-```js
-constructor({port, handler}) 
-```
-  - The constructor initiate a new TCP server by specifying the port, and an anonymous function to handle a new connection.
-
-#### Connection
-
-Takes care of handling the I/O for clients connected to the server.
-
-###### Methods
+The constructor takes two parameters:
 
 ```js
-httpConnection.send(data)
+  new Ambassador({port: PORT, target: TARGET})
 ```
 
-Sends data and keep the connection open, its equivalent to [socket.write](https://nodejs.org/api/net.html#net_socket_write_data_encoding_callback).
+ - port: port number for listening incoming traffic.
+ - target: port of the main container.
 
+
+#### tunnel
+
+This method orchestrate a proxy between incoming traffic and the main container.
 
 ```js
-  httpConnection.respond(data)
+  ambassador.tunnel({  })
 ```
-Sends data and keep and close the connection, its equivalent to [socket.end](https://nodejs.org/api/net.html#net_socket_end_data_encoding_callback).
+  - **empty:** If leave empty it will create a simple proxy.
 
-##### Events
+ ```js
+   ambassador.tunnel({  })
+ ```
+  - **subscribe:** Is a function to handle the traffic between the main container and the service.    
 
-```js
-httpConnection.on('server:read',  data => {})
-```
-Triggered when new data coming to the socket.
-
-
-### HTTPServer
-
-This constructor creates a new HTTP type of server.
-
-```js
-  new HTTPServer({port, handler: (httpConnection)=> {} })
-```
-Syntax: 
-```js
-  constructor({port, handler})
-```
-  - The constructor initiate a new HTTP server by specifying the port, and an anonymous function to handle a new connection.
-
-
-##### HTTPConnection
-
-Similar to connection but it add helper function to detect HTTP headers.
-
-###### Methods
-
-```js
-httpConnection.send(data)
-```
-
-Sends data and keep the connection open, its equivalent to [socket.write](https://nodejs.org/api/net.html#net_socket_write_data_encoding_callback).
-
-
-```js
-  httpConnection.respond(data)
-```
-Sends data and keep and close the connection, its equivalent to [socket.end](https://nodejs.org/api/net.html#net_socket_end_data_encoding_callback).
-
-
-
-##### Events
-
-```js
-httpConnection.on('server:read',  data => {})
-```
-
-Triggered when new data coming to the socket.
-
-
-```js
- server.on('server:http:headers', (header, data) =>{})
-```
-
-Triggered when a new HTTP request is detected.
-
-- header: an object with the HTTP request headers
+ ```js
+   ambassador.tunnel({ subscriber({ request, response }) })
+ ```
+    - **response.listen:** Listen for the response from the service.
+    - **response.override:** Stops the normal flow of communication in the proxy and replace the response with a custom one.
+    - **request.listen:** Listen for the data coming to the container.
+    - **request.server:** *Coming soon*.
