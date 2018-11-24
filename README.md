@@ -116,84 +116,8 @@ This constructor creates a new TCP server.
   new Server({port, handler: (connection)=> {} })
 ```
 Syntax: 
-```js
-constructor({port, handler}) 
-```
-  - The constructor initiate a new TCP server by specifying the port, and an anonymous function to handle a new connection.
 
-#### Connection
-
-Takes care of handling the I/O for clients connected to the server.
-
-###### Methods
-
-```js
-httpConnection.send(data)
-```
-
-Sends data and keep the connection open, its equivalent to [socket.write](https://nodejs.org/api/net.html#net_socket_write_data_encoding_callback).
+- **constructor**
+ - The constructor initiate a new TCP server by specifying the port, and an anonymous function to handle a new connection.
 
 
-```js
-  httpConnection.respond(data)
-```
-Sends data and keep and close the connection, its equivalent to [socket.end](https://nodejs.org/api/net.html#net_socket_end_data_encoding_callback).
-
-##### Events
-
-```js
-httpConnection.on('server:read',  data => {})
-```
-Triggered when new data coming to the socket.
-
-
-### HTTPServer
-
-This constructor creates a new HTTP type of server.
-
-```js
-  new HTTPServer({port, handler: (httpConnection)=> {} })
-```
-Syntax: 
-```js
-  constructor({port, handler})
-```
-  - The constructor initiate a new HTTP server by specifying the port, and an anonymous function to handle a new connection.
-
-
-##### HTTPConnection
-
-Similar to connection but it add helper function to detect HTTP headers.
-
-###### Methods
-
-```js
-httpConnection.send(data)
-```
-
-Sends data and keep the connection open, its equivalent to [socket.write](https://nodejs.org/api/net.html#net_socket_write_data_encoding_callback).
-
-
-```js
-  httpConnection.respond(data)
-```
-Sends data and keep and close the connection, its equivalent to [socket.end](https://nodejs.org/api/net.html#net_socket_end_data_encoding_callback).
-
-
-
-##### Events
-
-```js
-httpConnection.on('server:read',  data => {})
-```
-
-Triggered when new data coming to the socket.
-
-
-```js
- server.on('server:http:headers', (header, data) =>{})
-```
-
-Triggered when a new HTTP request is detected.
-
-- header: an object with the HTTP request headers
