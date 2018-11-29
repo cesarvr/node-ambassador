@@ -1,63 +1,8 @@
 var net = require('net')
 var Events = require('events')
+var { HTTP } = require('./http')
 
 console.log('DEBUG-Version!!')
-
-let HTTP = Object.create({
-  version: /HTTP\/1./, 
-
-  getStatus: function(data){
-    let headerFirstLine = data.toString().split('\n')[0]
-    let status = headerFirstLine.split(' ')[1].trim()
-    return status
-  },
-
-  getRequest(http_block) {
-    let str = http_block.toString().split('\n')[0]
-
-    str = str.split(' ')
-
-    let HTTPMethod   = str[0].trim() // [ GET ] /home HTTP1.1..
-    let HTTPResource = str[1].trim() // GET [ /home ] HTTP1.1..
-
-    return { HTTPMethod, HTTPResource }
-  },
-
-  getHeader: function(data){
-    let headerFirstLine = data.toString().split('\n')[0]
-    let status   = headerFirstLine.split(' ')[1].trim()
-
-    let state    = headerFirstLine.split(' ')
-      .splice(2,headerFirstLine.length)
-      .join(' ')
-      .trim()
-
-    return { status, state }
-  },
-
-  /* Expect a data: buffer 
-   *
-   * It guess the header of a particular request.
-   *
-   */
-  isRequest: function(data){
-    data = data.toString()
-
-    if(data === undefined || data === '')
-      return false
-    
-    return data.search(this.version) !== -1 
-  },
-
-  isResponse: function(data){
-    data = data.toString()
-
-    if(data === undefined || data === '')
-      return false
-
-    return data.search(this.version) !== -1 
-  }
-})
 
 class TCPService extends Events {
   constructor({port}) {
@@ -68,29 +13,37 @@ class TCPService extends Events {
 
     client.connect(port, '0.0.0.0', () => { })
 
-    client.on('data',  data => this.read(data))
-    client.on('connect',  () => console.log(`connected: ${port}`)) 
+    client.on('data',   data => this.read(data))
+    client.on('connect',  () => this._close = false )
+    client.on('error',   err => this.emit('error', err))
+    client.on('close',    () => this._close = true )
 
-    if(process.env['DEBUG']) { 
-        client.on('error', err  => console.log('etcp:client error: ', err))
-        client.on('close', ()  => console.log('tcp:client closing connection' )) 
+    if(process.env['DEBUG']) {
+      client.on('close', ()  => console.log('tcp:client closing connection' ))
+      client.on('error',  err  => console.error('service:error: ', err))
     }
 
     this.client = client
   }
 
-  send(data) {
-    this.client.write(data)
+  close() {
+    console.log('manually closing service:socket') 
+    this._close = true
   }
 
-  read(data){
-    this.emit('service:read', data)
+  read(data) {
+    this.emit('read', data)
+  }
+
+  send(data) {
+    if(!this._close)
+      this.client.write(data)
   }
 }
 
 class HTTPService extends TCPService {
   constructor({port}){
-    super({port}) 
+    super({port})
   }
 
   read(data){
@@ -98,8 +51,8 @@ class HTTPService extends TCPService {
 
     if ( HTTP.isResponse(data) ) {
       header = HTTP.getHeader(data)
-      this.emit(`service:http:${header.status}`, header, data)
-      this.emit(`service:http:headers`, header, data)
+      this.emit(`http:${header.status}`, header, data)
+      this.emit(`http:data`, header, data)
     }
 
     TCPService.prototype.read.call(this, data) // This the remainder that JS is not pure OOP.
@@ -111,7 +64,7 @@ class TCPSocket extends Events {
   constructor({socket}) {
     super()
     this.socket = socket
-    this.close = false 
+    this.close = false
 
     let unsubscribe = (socket) =>{
       socket.removeAllListeners(['data', 'error', 'end'])
@@ -119,13 +72,13 @@ class TCPSocket extends Events {
 
     let subscribe = (socket) => {
       socket.on('connect', () => this.openStream())
-      socket.on('data',  data => this.emit('server:read', data))
+      socket.on('data',  data => this.emit('read', data))
       socket.on('end',   end  =>  unsubscribe(socket) )
-      socket.on('error', err => this.emit('server:error', err))
+      socket.on('error', err  => this.emit('error', err))
 
-      if(process.env['DEBUG']) { 
+      if(process.env['DEBUG']) {
         socket.on('error', err  => console.log('tcp:server error:', err))
-        socket.on('close', ()   => console.log('tcp:server closing connection')) 
+        socket.on('close', ()   => console.log('tcp:server closing connection'))
       }
     }
 
@@ -135,7 +88,7 @@ class TCPSocket extends Events {
   send(data){
     if(!this.isStreamClosed())
       this.socket.write(data)
-  } 
+  }
 
   respond(data){
     this.socket.end(data)
@@ -157,22 +110,22 @@ class HTTPSocket extends TCPSocket {
 
     let read_chunks = (data) => {
       if(HTTP.isRequest(data))
-        this.emit('server:http:headers', HTTP.getRequest(data), data)
-    } 
+        this.emit('http:data', HTTP.getRequest(data), data)
+    }
 
     socket.on('data',  data => read_chunks(data))
   }
 }
 
 function HTTPServer({port, handler}) {
-  port = port 
+  port = port
   net.createServer( (socket)  => {
     handler( new HTTPSocket({socket}) )
   }).listen(port)
 }
 
 function Server({port, handler}) {
-  port = port 
+  port = port
   net.createServer( (socket)  => {
     handler( new TCPSocket({socket}) )
   }).listen(port)
