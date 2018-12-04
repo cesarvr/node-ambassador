@@ -23,11 +23,12 @@ You can think of it as a easy library to create and manipulate proxy servers.
 
 
 
-## Creating a Proxy
+## Usage  
+
+
+Creating a simple Proxy server.
 
 ![](https://raw.githubusercontent.com/cesarvr/hugo-blog/master/static/istio-2/relationship-objects.png)
-
-We just need to connect the two classes, and we got a full proxy.
 
 ```js
 
@@ -41,6 +42,8 @@ new Ambassador({port: PORT, target: TARGET}).tunnel({})
 console.log(`Listening for request in ${PORT} and targeting ${TARGET}`)
 
 ```
+
+
 
 ![](https://github.com/cesarvr/hugo-blog/blob/master/static/istio-2/proxy-v1.gif)
 
@@ -69,26 +72,19 @@ Connection: close
 You detect the response header of the service and send the response.
 
 ```js
-
 let { ambassador }  = require('../node-ambassador/')
 const http404 = `...`
 
-const target = process.env['target_port'] || 8087
-const port   = process.env['port'] || 8080
+const TARGET = process.env['TARGET_PORT'] || 8087
+const PORT   = process.env['PORT'] || 8080
 
-function ret404({response, request}) {
-   response.listen((header) => {
-     if(header.status === '404')
-      response.override(http404)
-   })
+function override_404({service, server}) {
+  service.on('http:404', () => console.log('404 Detected!'))
+  service.on('http:404', () => server.respond(HTTP404))
 }
 
-new ambassador({port: PORT, target: TARGET})
-      .tunnel({subscriber: ret404 })
-
-console.log(`listening for request in ${PORT} and targeting ${TARGET}`)
-
-
+new Ambassador({port: PORT, target: TARGET})
+      .tunnel({ override_404 })
 ```
 
 Here is an example of overriding the response of a [Wildfly Java](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=2ahUKEwjo1fqdg-PeAhUHLVAKHV0OCk8QFjAAegQIChAB&url=http%3A%2F%2Fwildfly.org%2F&usg=AOvVaw0_um9NB2aqGeJRcMk6CPHb) micro-service.
@@ -101,20 +97,15 @@ Other example, imagine you want to be notified if a server crash with an HTTP 50
 
 ```js
 
-function ret500(header) {
-     if(header.status === '500')
-      send_mail_to()
+function ret500({service}) {
+    service.on('http:404', () => send_mail_to() )
 }
 
- new ambassador({port: PORT, target: TARGET_PORT})
-      .tunnel({
-        subscriber: ({response}) =>
-                        response.listen( ret500 )
-      })
-
+new Ambassador({port: PORT, target: TARGET})
+      .tunnel({ ret500 })
 ```
 
-Another, imagine you want to test create a reusable container that intercepts and validates requests.
+You want to test create a reusable container that intercepts and validates requests.
 
 ```js
 let { ambassador }  = require('../node-ambassador/')
@@ -122,14 +113,13 @@ let { ambassador }  = require('../node-ambassador/')
 const target = process.env['target_port'] || 8087
 const port   = process.env['port'] || 8080
 
-function OAuth(header, payload) {
-  check_token(payload) // throw: NotAuthenticated   
+function ret500({service}) { /*...*/ }
+function Auth({ server }) {
+  service.on('http:data', (header, rawHTTP) => check_token(rawHTTP))
 }
 
-new ambassador({port: PORT, target: TARGET})
-      .tunnel({
-        subscriber: ({request}) => request.listen( OAuth )
-      })
+new Ambassador({port: PORT, target: TARGET})
+      .tunnel({ ret500, Auth })
 ```
 
 ## API
@@ -141,28 +131,17 @@ The constructor takes two parameters:
 ```js
   new Ambassador({port: PORT, target: TARGET})
 ```
-
  - port: port number for listening incoming traffic.
  - target: port of the main container.
-
 
 #### tunnel
 
 This method orchestrate a proxy between incoming traffic and the main container.
 
-```js
-  ambassador.tunnel({  })
-```
+ ```js
+   ambassador.tunnel({ subscriber, ... })
+ ```
   - **empty:** If leave empty it will create a simple proxy.
-
- ```js
-   ambassador.tunnel({  })
- ```
-  - **subscribe:** Is a function to handle the traffic between the main container and the service.    
-
- ```js
-   ambassador.tunnel({ subscriber({ request, response }) })
- ```
 
 **Response** Methods:
 
