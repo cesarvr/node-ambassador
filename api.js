@@ -15,7 +15,7 @@ class TCPService extends Events {
 
     client.on('data',   data => this.read(data))
     client.on('connect',  () => this._close = false )
-    client.on('error',   err => this.emit('error', err))
+    client.on('error',    err => console.warn('tcp/client error->', err))
     client.on('close',    () => this._close = true )
 
     if(process.env['DEBUG']) {
@@ -27,7 +27,7 @@ class TCPService extends Events {
   }
 
   close() {
-    console.log('manually closing service:socket') 
+    console.log('manually closing service:socket')
     this._close = true
   }
 
@@ -74,7 +74,7 @@ class TCPSocket extends Events {
       socket.on('connect', () => this.openStream())
       socket.on('data',  data => this.emit('read', data))
       socket.on('end',   end  =>  unsubscribe(socket) )
-      socket.on('error', err  => this.emit('error', err))
+      socket.on('error', err  => ()=>console.warn('tcp/connection error: ', err))
 
       if(process.env['DEBUG']) {
         socket.on('error', err  => console.log('tcp:server error:', err))

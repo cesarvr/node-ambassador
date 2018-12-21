@@ -11,7 +11,6 @@ let HTTP = Object.create({
 
   getRequest(http_block) {
     let str = http_block.toString().split('\n')[0]
-
     str = str.split(' ')
 
     let HTTPMethod   = str[0].trim() // [ GET ] /home HTTP1.1..
@@ -24,12 +23,12 @@ let HTTP = Object.create({
     let headerFirstLine = data.toString().split('\n')[0]
     let status   = headerFirstLine.split(' ')[1].trim()
 
-    let state    = headerFirstLine.split(' ')
+    let message    = headerFirstLine.split(' ')
       .splice(2,headerFirstLine.length)
       .join(' ')
       .trim()
 
-    return { status, state }
+    return { status, message }
   },
 
   /* Expect a data: buffer
