@@ -1,27 +1,36 @@
 # Ambassadors Containers
 
 
-[The Ambassador pattern](https://ai.google/research/pubs/pub45406), is a way to configure containers where one container the ambassador proxy communication to and from a main container, the ambassador can be designed to encapsulate features that enhance the main container.
+[The Ambassador pattern](https://ai.google/research/pubs/pub45406), is a way to configure containers where one container (the ambassador), proxy communication to and from a main container. The container in the role of Ambassador can be designed to encapsulate features that we want to share with the main container. This technique is widely use by service mesh frameworks like Istio, Linkerd, etc.
 
-For example, you have a service making calls to some other service, but now that "other" service requires some authentication, you can develop an ambassador container that handle that new feature and keep the original service agnostic of security protocols.
+## What should I care ?
+
+For example, you have two service where **A** fetch some information of **B**, let say that the team in charge of service **B** decide to implement a brand new Authentication protocol, this leave you with two options hardcode this authentication knowledge into service **A** or encapsulate this knowledge into an **Ambassador** container that will handle this on behalf of service **A**. 
+
+The advantage is that you can upgrade any service that want to use this aunthentication by just configuring and deploying this **Ambassador** in the same pod.
 
 If you want more example take a look a [this post](https://cesarvr.io/post/istio-2/).
 
 ![](https://github.com/cesarvr/hugo-blog/blob/master/static/istio-2/ambassador.png)
 
+
+## Any Example ??
+
+Here I just encapsulate some telemetry logic into an **Ambassador** container using Node.JS, then I just reuse this container to gather telemetry of any container.
+
+![](https://raw.githubusercontent.com/cesarvr/hugo-blog/master/static/istion-3/dashboard.gif)
+
+
+
 ## Node-Ambassador
 
-Its just an API that facilitate the communication between the traffic coming to the service and the traffic going from the service to the client that made the call.
-
-You can think of it as a easy library to create and manipulate proxy servers.
+I just create this API that easy the development of this type of container. 
 
 ## Installation
 
 ```sh
   npm install node-ambassador --save
 ```
-
-
 
 ## Usage  
 
@@ -49,9 +58,7 @@ console.log(`Listening for request in ${PORT} and targeting ${TARGET}`)
 
 ## How To Override A Response
 
-Let's say you want to change the response coming from a service, let's say you want to change the default message of the 404 status.
-
-First you write or load the page:
+Let's say you want to change the response coming from a service by changing the default HTTP 404 status message.
 
 
 ```js
