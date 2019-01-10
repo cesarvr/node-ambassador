@@ -9,7 +9,7 @@ For example, you have two service where **A** fetch some information of **B**, l
 
 The advantage is that you can upgrade any service that want to use this aunthentication by just configuring and deploying this **Ambassador** in the same pod.
 
-If you want more example take a look a [this post](https://cesarvr.io/post/istio-2/).
+For more information take a look at [this post](https://cesarvr.io/post/istio-2/).
 
 ![](https://github.com/cesarvr/hugo-blog/blob/master/static/istio-2/ambassador.png)
 
